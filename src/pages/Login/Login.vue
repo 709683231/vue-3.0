@@ -4,44 +4,45 @@
       <div class="login_header">
         <h2 class="login_logo">硅谷外卖</h2>
         <div class="login_header_title">
-          <a href="javascript:;" class="on">短信登录</a>
-          <a href="javascript:;">密码登录</a>
+          <a href="javascript:;" :class="{on:isShowChange}" @click.prevent="isShowChange=true">短信登录</a>
+          <a href="javascript:;" :class="{on:!isShowChange}" @click.prevent="isShowChange=false " >密码登录</a>
         </div>
       </div>
       <div class="login_content">
         <form>
-          <div class="on">
+          <div :class="{on:isShowChange}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号">
-              <button disabled="disabled" class="get_verification">获取验证码</button>
+              <input type="tel" maxlength="11" placeholder="手机号" v-model="phone" >
+              <button :disabled="!isRightPhone || num>0" class="get_verification" :class="{'right_phone_number':isRightPhone}"
+              @click="sendCode">{{num>0? `获取验证码${num}s`:'获取验证码'}}</button>
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码">
+              <input type="tel" maxlength="8" placeholder="验证码" v-model="code">
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
               <a href="javascript:;">《用户服务协议》</a>
             </section>
           </div>
-          <div>
+          <div :class="{on:!isShowChange}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名">
+                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" v-model="name">
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="密码">
-                <div class="switch_button off">
-                  <div class="switch_circle"></div>
-                  <span class="switch_text">...</span>
+                <input :type="showSwitch ? 'password': 'text'" maxlength="8" placeholder="密码" v-model="pwd">
+                <div class="switch_button" @click="showSwitch = !showSwitch" :class="showSwitch ? 'off': 'on'">
+                  <div class="switch_circle" :class="{'right': !showSwitch}"></div>
+                  <span class="switch_text">{{showSwitch ? '...': 'abc'}}</span>
                 </div>
               </section>
               <section class="login_message">
-                <input type="text" maxlength="11" placeholder="验证码">
-                <img class="get_verification" src="./images/captcha.svg" alt="captcha">
+                <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
+                <img class="get_verification" :src="'http://localhost:5000/captcha?'+captchas" alt="captcha" @click.prevent="getCaptcha" >
               </section>
             </section>
           </div>
-          <button class="login_submit">登录</button>
+          <button class="login_submit" @click.prevent="loginSubmit">登录</button>
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
@@ -53,8 +54,72 @@
 </template>
 
 <script type="text/ecmascript-6">
+  import { pwdLogin ,phoneLogin ,sendCode} from '../../Api'
+// import { setInterval, clearInterval } from 'timers';
   export default {
+    data(){
+      return {
+        isShowChange:true,
 
+        captcha:'',
+        phone:'',
+
+        code:'',
+        name:'',
+        pwd:'',
+
+        showSwitch:true,
+        captchas:'',
+
+        num:0
+
+      }
+    },
+    //验证是否是十一位手机号
+    computed:{
+      isRightPhone(){
+        return /^1\d{10}$/.test(this.phone)
+      }
+    },
+    methods:{
+      //获取验证图片
+      getCaptcha(){
+        this.captchas = Date.now()
+      },
+      //发送短信验证
+      async sendCode(){
+        this.num = 10
+        const timeId = setInterval(()=>{
+          this.num--
+          if(this.num <= 0){
+            clearInterval(timeId)
+          }
+        },1000)
+        const result = await sendCode(this.phone)
+        if(rssult.code === 0){
+          alert('消息发送成功')
+        }else{
+          alert(result.msg)
+        }
+      },
+      //获取用户登陆
+      async loginSubmit(){
+        const {isShowChange,captcha,phone,code,name,pwd} = this
+        let result
+        if(isShowChange){
+          result = await phoneLogin(phone,code)
+        }else{
+          result = await pwdLogin({name,pwd,captcha})
+        }
+        if(result.code===0){
+          const user = result.data
+          this.$store.dispatch('pwdLogin',user)
+          this.$router.replace('/profile')
+        }else{
+          alert(result.msg)
+        }
+      },
+    }
   }
 </script>
 
@@ -120,6 +185,8 @@
                   color #ccc
                   font-size 14px
                   background transparent
+                  &.right_phone_number
+                    color: black
               .login_verification
                 position relative
                 margin-top 16px
@@ -148,7 +215,7 @@
                   &.on
                     background #02a774
                   >.switch_circle
-                    //transform translateX(27px)
+                    // transform translateX(27px)
                     position absolute
                     top -1px
                     left -1px
@@ -159,6 +226,8 @@
                     background #fff
                     box-shadow 0 2px 4px 0 rgba(0,0,0,.1)
                     transition transform .3s
+                    &.right
+                      transform translateX(27px)
               .login_hint
                 margin-top 12px
                 color #999

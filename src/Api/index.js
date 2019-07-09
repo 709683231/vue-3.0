@@ -17,3 +17,23 @@ export const reqShops = ({latitude,longitude}) => ajax({
     params:{latitude,longitude},
     url:BASE+`/shops`
 })
+
+// 6、用户名密码登陆
+export const pwdLogin = ({name,pwd,captcha}) => ajax({
+    methods:"POST",
+    data:{name,pwd,captcha},
+    url:BASE+`/login_pwd`
+})
+
+//8、手机号验证码登陆
+export const phoneLogin = (phone,code) => ajax({
+    methods:"POST",
+    data:{phone,code},
+    url:BASE+`/login_sms`
+})
+//7、发送短信验证码
+export const sendCode = (phone) => ajax({
+    methods:"get",
+    data:{phone},
+    url:BASE+`/sendcode`
+})
