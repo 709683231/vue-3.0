@@ -7,12 +7,12 @@
           <i class="iconfont icon-person"></i>
         </div>
         <div class="user-info">
-          <p class="user-info-top">登录/注册</p>
-          <p>
+          <p class="user-info-top" v-show="!user.phone">{{user.name?user.name:'登录/注册'}}</p>
+          <p v-show="!user.name">
             <span class="user-icon">
               <i class="iconfont icon-shouji icon-mobile"></i>
             </span>
-            <span class="icon-mobile-number">暂无绑定手机号</span>
+            <span class="icon-mobile-number">{{user.phone?user.phone:'暂无绑定手机号'}}</span>
           </p>
         </div>
         <span class="arrow">
@@ -88,12 +88,32 @@
         </div>
       </a>
     </section>
+    <section class="profile_my_order border-1px" v-if="user._id">
+      <Button type="danger" size="large" @click="logout">退出登陆</Button>
+    </section>
   </section>
 </template>
 
 <script type="text/ecmascript-6">
-  export default {
+import { MessageBox } from 'mint-ui'
+import { mapState } from 'vuex'
+import router from '../../router'
 
+
+  export default {
+    computed:{
+      ...mapState(['user'])
+    },
+    methods:{
+      logout () {
+        MessageBox.confirm('确定退出?').then(action => {
+          this.$store.dispatch('logOut')
+          this.$router.replace('/login')
+        },action => {
+
+        });
+      }
+    }
   }
 </script>
 

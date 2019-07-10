@@ -1,46 +1,66 @@
 import axios from 'axios'
-import qs from 'qs'
-import store from '../router/index';
-import router from '../router/index';
+import router from '../router'
+import store from '../vuex/store'
+import qs from 'qs';
 
 
-axios.defaults.timeout = 20000
-
-axios.interceptors.request.use(config => {
-  const {
-    method,
-    data
-  } = config
-  if (method.toLowerCase() === 'post' && data && typeof data === 'object') {
-    config.data = qs.stringify(data)
-  }
-  const token = localStorage.getItem('token_key')
-  if(token){
-    config.headers.Authorization = 'token ' + token
-  }
-  return config;
+// axios.defaults.timeout = 12000
+const instance = axios.create({
+  timeout:12000
 })
 
+// instance.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
 
-axios.interceptors.response.use(
-  response =>{
-    return response.data
-  },
-  error =>{
-    const status = error.response.status
-    const msg = error.message
-    if(status===401){
-      store.dispatch('logOut')
-      router.replace('/login')
-      alert(error.response.data.message)
-    }else if(status ===404){
-      alert('请求的数据不存在')
-    }else{
-      alert('请求异常'+msg)
+axios.interceptors.request.use(
+  (config) => {
+    const {method, data} = config
+    if(method.toLowerCase() === 'post' && data && typeof data ==='object'){
+      config.data = qs.stringify(data)
     }
-    alert('error' + error.message)
-    return new Promise(()=>{})
+    const {needToken} = config.headers
+    if(needToken){
+      const token = store.state.token
+      if(token){
+        config.headers.Authorization = token
+      }else {
+        const error = new Error('没有token')
+        error.status = 401
+        throw error
+      }
+    }
+    return config
   }
 )
 
-export default axios
+axios.interceptors.response.use(response => {
+    return response.data
+  },
+  error => {
+    if (!error.response) {
+      if (error.status === 401) {
+        if (router.currentRoute.path !== '/login') {
+          router.replace('/login')
+          alert(error.message)
+        }
+      }
+    } else {
+      const status = error.response.status
+      const msg = error.message
+      if(status === 401){
+        if(router.currentRoute.path !== '/login'){
+          store.dispatch('logOut')
+          router.replace('/login')
+          alert(error.response.data.message)
+        }else{
+          console.log('token已经过期')
+        }
+      }else if(status === 404){
+        alert('资源不存在')
+      }else{
+        alert('请求异常' + msg)
+      }
+    }
+    return new Promise(()=>{})
+  }
+)
+export default axios 

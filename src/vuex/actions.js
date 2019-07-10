@@ -1,12 +1,21 @@
 
-import Cookies from 'js-cookie'
+// import Cookies from 'js-cookie'
 import {
   reqAddress,
   reqCategorys,
-  reqShops
+  reqShops,
+  reqAutoLogin
 } from '../Api'
 
-import {RECEIVE_ADDRESS,RECEIVE_CATEGORYS,RECEIVE_SHOPS,RECEIVE_USER,RESET_USER} from './mutations-types'
+import {
+  RECEIVE_ADDRESS,
+  RECEIVE_CATEGORYS,
+  RECEIVE_SHOPS,
+  RECEIVE_USER,
+  RESET_USER,
+  RECEIVE_TOKEN,
+  RESET_TOKEN
+} from './mutations-types'
  
 export default {
   async getAddress({commit,state}) {
@@ -39,15 +48,31 @@ export default {
   },
 
 
-  pwdLogin({commit},user){
+  receiveUser({commit},user){
       localStorage.setItem('token_key',user.token)
+      commit(RECEIVE_TOKEN,{token : user.token})
+      delete user.token
       commit(RECEIVE_USER,{user})
   },
+
   
   logOut({commit}){
     commit(RESET_USER)
+    commit(RESET_TOKEN)
     localStorage.removeItem('token_key')
-    Cookies.remove('user_id')
-  }
+  },
+
+
+  async autoLogin({commit,state}){
+    const token = state.token
+    if(token){
+      const result = await reqAutoLogin()
+      if(result.code===0){
+        const user = result.data
+        commit(RECEIVE_USER,{user})
+      }
+    }
+  },
+
 
 }

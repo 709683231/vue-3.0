@@ -78,7 +78,6 @@ export default {
     }
   },
   async mounted() {
-    this.$store.dispatch("getAddress");
 
     await this.$store.dispatch("getCategorys");
     new Swiper(".swiper-container", {

@@ -4,15 +4,16 @@
       <div class="login_header">
         <h2 class="login_logo">硅谷外卖</h2>
         <div class="login_header_title">
-          <a href="javascript:;" :class="{on:isShowChange}" @click.prevent="isShowChange=true">短信登录</a>
-          <a href="javascript:;" :class="{on:!isShowChange}" @click.prevent="isShowChange=false " >密码登录</a>
+          <a href="javascript:;" :class="{on:loginType}" @click.prevent="loginType=true">短信登录</a>
+          <a href="javascript:;" :class="{on:!loginType}" @click.prevent="loginType=false " >密码登录</a>
         </div>
       </div>
       <div class="login_content">
         <form>
-          <div :class="{on:isShowChange}">
+          <div :class="{on:loginType}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号" v-model="phone" >
+              <input type="tel" maxlength="11" placeholder="手机号" v-model="phone" name='myphone' v-validate="{required: true,regex: /^1\d{10}$/}">
+              <span style="color: red;" v-show="errors.has('myphone')">{{ errors.first('myphone') }}</span>
               <button :disabled="!isRightPhone || num>0" class="get_verification" :class="{'right_phone_number':isRightPhone}"
               @click="sendCode">{{num>0? `获取验证码${num}s`:'获取验证码'}}</button>
             </section>
@@ -24,10 +25,11 @@
               <a href="javascript:;">《用户服务协议》</a>
             </section>
           </div>
-          <div :class="{on:!isShowChange}">
+          <div :class="{on:!loginType}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" v-model="name">
+                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" v-model="name" name='myemail' v-validate="'required|email'">
+                <span style="color: red;" v-show="errors.has('myemail')">{{ errors.first('myemail') }}</span>
               </section>
               <section class="login_verification">
                 <input :type="showSwitch ? 'password': 'text'" maxlength="8" placeholder="密码" v-model="pwd">
@@ -54,12 +56,16 @@
 </template>
 
 <script type="text/ecmascript-6">
-  import { pwdLogin ,phoneLogin ,sendCode} from '../../Api'
+import { reqPwdLogin ,reqSmsLogin ,reqsendCode} from '../../Api'
+import VeeValidate from 'vee-validate'
+import zh_CN from 'vee-validate/dist/locale/zh_CN'
+
+
 // import { setInterval, clearInterval } from 'timers';
   export default {
     data(){
       return {
-        isShowChange:true,
+        loginType:false,
 
         captcha:'',
         phone:'',
@@ -81,6 +87,21 @@
         return /^1\d{10}$/.test(this.phone)
       }
     },
+    mounted(){
+      VeeValidate.Validator.localize('zh_CN', {
+        messages: zh_CN.messages,
+        attributes: {
+          myphone: '手机号',
+          myemail: '邮箱'
+        }
+      })
+      VeeValidate.Validator.extend('email', {
+        validate: value => {
+            return /^1\d{10}$/.test(value)
+          },
+        getMessage: field => field + '/手机号输入有误'
+      })
+    },
     methods:{
       //获取验证图片
       getCaptcha(){
@@ -91,29 +112,30 @@
         this.num = 10
         const timeId = setInterval(()=>{
           this.num--
-          if(this.num <= 0){
+          if(this.num === 0){
             clearInterval(timeId)
           }
         },1000)
-        const result = await sendCode(this.phone)
-        if(rssult.code === 0){
+        const result = await reqsendCode(this.phone)
+        if(result.code === 0){
           alert('消息发送成功')
         }else{
           alert(result.msg)
         }
       },
-      //获取用户登陆
+      //用户开始登陆
       async loginSubmit(){
-        const {isShowChange,captcha,phone,code,name,pwd} = this
+        const {loginType,captcha,phone,code,name,pwd} = this
         let result
-        if(isShowChange){
-          result = await phoneLogin(phone,code)
-        }else{
-          result = await pwdLogin({name,pwd,captcha})
+        if(!loginType){
+          result = await reqPwdLogin({name,pwd,captcha})
+        }else{   
+          result = await reqSmsLogin(phone,code)
         }
+      
         if(result.code===0){
           const user = result.data
-          this.$store.dispatch('pwdLogin',user)
+          this.$store.dispatch('receiveUser',user)
           this.$router.replace('/profile')
         }else{
           alert(result.msg)
