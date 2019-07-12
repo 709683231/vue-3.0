@@ -1,99 +1,149 @@
 <template>
   <div>
     <div class="goods">
-      <div class="menu-wrapper">
-        <ul>
-          <li class="menu-item current">
-          <img class="icon" src="https://fuss10.elemecdn.com/0/6a/05b267f338acfeb8bd682d16e836dpng.png">
-            <span class="text bottom-border-1px">折扣</span>
-          </li>
-          <li class="menu-item">
+      <div class="menu-wrapper" ref="leftWrapper">
+        <ul ref="leftUl">
+         <li class="menu-item" v-for="(good, index) in goods" 
+            :key="good.name" @click="clickItem(index)" :class="{current: index===currentIndex}">
             <span class="text bottom-border-1px">
-              <img class="icon" src="https://fuss10.elemecdn.com/b/91/8cf4f67e0e8223931cd595dc932fepng.png">
-              优惠
+              <img class="icon" :src="good.icon" v-show="good.icon">
+              {{good.name}}
             </span>
           </li>
         </ul>
       </div>
-      <div class="foods-wrapper">
-        <ul>
-          <li class="food-list-hook">
-            <h1 class="title">折扣</h1>
+      <div class="foods-wrapper" ref="rightWrapper">
+        <ul ref="rightUl">
+          <li class="food-list-hook food-list" v-for="good in goods" :key="good.name" >
+            <h1 class="title">{{good.name}}</h1>
             <ul>
-              <li class="food-item bottom-border-1px">
+              <li class="food-item bottom-border-1px" v-for="foods in good.foods" :key="foods.name">
                 <div class="icon">
                   <img width="57" height="57"
-                      src="http://fuss10.elemecdn.com/8/a6/453f65f16b1391942af11511b7a90jpeg.jpeg?imageView2/1/w/114/h/114">
+                      :src="foods.icon">
                 </div>
                 <div class="content">
-                  <h2 class="name">南瓜粥</h2>
-                  <p class="desc">甜粥</p>
+                  <h2 class="name">{{foods.name}}</h2>
+                  <p class="desc">{{foods.description}}</p>
                   <div class="extra">
-                    <span class="count">月售91份</span>
-                    <span>好评率100%</span></div>
+                    <span class="count">月售{{foods.sellCount}}份</span>
+                    <span>好评率{{foods.rating}}%</span></div>
                   <div class="price">
-                    <span class="now">￥9</span>
+                    <span class="now">￥{{foods.price}}</span>
                   </div>
                   <div class="cartcontrol-wrapper">
-                    CartControl组件
-                  </div>
-                </div>
-              </li>
-              <li class="food-item bottom-border-1px">
-                <div class="icon">
-                  <img width="57" height="57"
-                      src="http://fuss10.elemecdn.com/d/22/260bd78ee6ac6051136c5447fe307jpeg.jpeg?imageView2/1/w/114/h/114">
-                </div>
-                <div class="content">
-                  <h2 class="name">红豆薏米美肤粥</h2>
-                  <p class="desc">甜粥</p>
-                  <div class="extra">
-                    <span class="count">月售86份</span>
-                    <span>好评率100%</span>
-                  </div>
-                  <div class="price">
-                    <span class="now">￥12</span>
-                  </div>
-                  <div class="cartcontrol-wrapper">
-                    CartControl组件
+                    <CartControl/>
                   </div>
                 </div>
               </li>
             </ul>
-          </li>
-          <li class="food-list food-list-hook">
-            <h1 class="title">香浓甜粥</h1>
-            <ul>
-              <li class="food-item bottom-border-1px">
-                <div class="icon">
-                  <img width="57" height="57" src="http://fuss10.elemecdn.com/6/72/cb844f0bb60c502c6d5c05e0bddf5jpeg.jpeg?imageView2/1/w/114/h/114">
-                </div>
-                <div class="content">
-                  <h2 class="name">红枣山药粥</h2>
-                  <p class="desc">红枣山药糙米粥,素材包</p>
-                  <div class="extra">
-                    <span class="count">月售17份</span>
-                    <span>好评率100%</span>
-                  </div>
-                  <div class="price">
-                    <span class="now">￥29</span>
-                    <span class="old">￥36</span>
-                  </div>
-                  <div class="cartcontrol-wrapper">
-                    CartControl组件
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </li>
+          </li>      
         </ul>
       </div>
+      <ShopCart  />
     </div>
+    <food  style="display:none"/>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
+import { mapState } from 'vuex'
+import BScroll from 'better-scroll'
+import Food from '../../../components/Food/Food.vue'
+import ShopCart from '../../../components/ShopCart/ShopCart.vue'
   export default {
+    data(){
+      return {
+        scrollY:0,
+        tops:[],
+        food:{}
+        
+      }
+    },
+
+    mounted(){
+      if(this.goods.length>0){
+        this._initTop()
+        this._initScroll()
+      }
+    },
+    components:{
+      Food,
+      ShopCart
+    },
+
+    computed:{
+      ...mapState({
+        goods : state => state.shop.goods
+      }),
+
+      currentIndex () {
+        const {scrollY, tops} = this
+        const index = tops.findIndex((top, index) => scrollY>=top && scrollY<tops[index+1])
+        if (this.index!==index && this.leftScroll) {
+          this.index = index
+          const li = this.$refs.leftUl.children[index]
+          this.leftScroll.scrollToElement(li, 500)
+        }
+        return index
+      }
+
+    },
+
+
+    methods:{
+      clickItem(index){
+        const top = this.tops[index]
+        this.scrollY = top
+        this.rightScroll.scrollTo(0, -top, 300)
+      },
+
+
+
+      _initScroll(){
+        this.leftScroll = new BScroll(this.$refs.leftWrapper,{
+          click: true,
+        }),
+
+        this.rightScroll = new BScroll(this.$refs.rightWrapper,{
+          probeType:1,
+          click: true
+        })
+
+        this.rightScroll.on('scroll',({x,y})=>{
+          this.scrollY = Math.abs(y)
+        })
+
+        this.rightScroll.on('scrollEnd',({x,y})=>{
+          this.scrollY = Math.abs(y)
+        })
+      },
+
+      _initTop(){
+        let top = 0
+        const tops = []
+        tops.push(top)
+        const lis = this.$refs.rightUl.children
+        Array.prototype.slice.call(lis).forEach(li => {
+          top += li.clientHeight 
+          tops.push(top)
+        });
+        this.tops = tops
+        console.log(this.tops)
+
+      },
+
+
+    },
+
+    watch : {
+      goods(){
+        this.$nextTick(()=>{
+          this._initTop()
+          this._initScroll()
+        })
+      }
+    }
   }
 </script>
 

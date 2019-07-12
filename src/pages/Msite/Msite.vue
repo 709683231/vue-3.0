@@ -54,10 +54,12 @@ import { nextTick } from 'q';
 //   },
 // })
 // },4000)
-
 export default {
   computed: {
-    ...mapState(["address", "categorys"]),
+    ...mapState({
+      address : state => state.msite.address,
+      categorys : state => state.msite.categorys
+    }),
 
     categoryArr() {
       const bigArr = [];

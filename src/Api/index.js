@@ -52,3 +52,7 @@ export const reqAutoLogin = () => ajax({
     url:BASE + '/auto_login',
     headers:{needToken:true}
 })
+
+export const reqGoods = () => ajax('/shopgoods')
+export const reqRatings = () => ajax('/shopratings')
+export const reqInfo = () => ajax('/shopinfo')

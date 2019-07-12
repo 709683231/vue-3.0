@@ -19,7 +19,7 @@ axios.interceptors.request.use(
     }
     const {needToken} = config.headers
     if(needToken){
-      const token = store.state.token
+      const token = store.state.user.token
       if(token){
         config.headers.Authorization = token
       }else {
