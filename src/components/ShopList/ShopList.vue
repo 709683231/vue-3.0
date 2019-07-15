@@ -66,6 +66,7 @@
         shops : state => state.msite.shops
       })
     },
+    
     mounted(){
       this.$store.dispatch('getShops')
     }

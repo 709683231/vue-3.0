@@ -3,50 +3,114 @@
     <div class="shopcart">
       <div class="content">
         <div class="content-left">
-          <div class="logo-wrapper">
-            <div class="logo highlight">
-              <i class="iconfont icon-shopping_cart highlight"></i>
+          <div class="logo-wrapper" @click="toggleShow" >
+            <div class="logo " :class="{highlight: totalPrice>0}">
+              <i class="iconfont icon-shopping_cart " :class="{highlight: totalPrice>0}"></i>
             </div>
-            <div class="num">1</div>
+            <div class="num" v-if="totalCount>0">{{totalCount}}</div>
           </div>
-          <div class="price highlight">￥10</div>
-          <div class="desc">另需配送费￥4元</div>
+          <div class="price " :class="{highlight: totalPrice>0}">￥{{totalPrice}}</div>
+          <div class="desc">另需配送费￥{{info.deliveryPrice}}元</div>
         </div>
-        <div class="content-right">
-          <div class="pay not-enough">
-            还差￥10元起送
+        <div class="content-right" >
+          <div class="pay " :class="{enough:(info.minPrice-totalPrice)<0}">
+            {{payText}}
           </div>
         </div>
       </div>
-      <div class="shopcart-list" style="display: none;">
-        <div class="list-header">
-          <h1 class="title">购物车</h1>
-          <span class="empty">清空</span>
-        </div>
-        <div class="list-content">
-          <ul>
-            <li class="food">
-              <span class="name">红枣山药糙米粥</span>
-              <div class="price"><span>￥10</span></div>
-              <div class="cartcontrol-wrapper">
-                <div class="cartcontrol">
-                  <div class="iconfont icon-remove_circle_outline"></div>
-                  <div class="cart-count">1</div>
-                  <div class="iconfont icon-add_circle"></div>
+      <transition name="fade">
+        <div class="shopcart-list" v-show="listShow">
+          <div class="list-header">
+            <h1 class="title">购物车</h1>
+            <span class="empty" @click="clearShop">清空</span>
+          </div>
+          <div class="list-content" ref="lists">
+            <ul>
+              <li class="food" v-for="(food,index) in cartFoods" :key="index">
+                <span class="name">{{food.name}}</span>
+                <div class="price"><span>￥{{food.price}}</span></div>
+                <div class="cartcontrol-wrapper">
+                  <CartControl :food="food"/>
                 </div>
-              </div>
-            </li>
-          </ul>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
+      </transition>
+
     </div>
-  <div class="list-mask" style="display: none;"></div>
+  <div class="list-mask" v-show="listShow" @click="toggleShow"></div>
 </div>
 </template>
 
 <script type="text/ecmascript-6">
+
+  import { mapState, mapGetters } from 'vuex'
+  import {MessageBox} from 'mint-ui'
+  import BScroll from 'better-scroll'
+  import {CLEAR_CART} from '../../vuex/mutations-types'
   export default {
-    
+
+    data(){
+      return {
+        isShow:false
+      }
+    },
+
+    computed:{
+      ...mapGetters(['totalPrice','totalCount']),
+
+      ...mapState({
+        cartFoods : state => state.shop.cartFoods, 
+        info : state => state.shop.info
+      }),
+
+      payText(){
+        const {totalPrice} = this
+        const minPrice = this.info.minPrice
+        let result = totalPrice - minPrice
+        if(result>0){
+          return `去结算`
+        }else{
+          return `还差￥${minPrice - totalPrice}元起送`
+        }
+      },
+
+      listShow(){
+        if(this.totalCount=== 0){
+          this.isShow = false
+          return false
+        }
+        if(this.isShow){
+          this.$nextTick(()=>{
+            if(!this.lists){
+              this.lists = new BScroll(this.$refs.lists,{
+                click:true
+              })
+            }else{
+              this.lists.refresh()
+            }
+          })
+          
+        }
+        return this.isShow
+      }
+    },
+
+    methods:{
+      toggleShow(){
+        if(this.totalCount){
+          this.isShow = !this.isShow
+        }
+      },
+
+      clearShop(){
+        MessageBox.confirm('确定要清空购物车吗？').then(action => {
+          this.$store.commit(CLEAR_CART)
+        }, action=> {})
+      }
+    },
+
   }
 </script>
 
@@ -144,6 +208,11 @@
       top: 0
       z-index: -1
       width: 100%
+      transform translateY(-100%)
+      &.fade-enter-active,&.fade-leave-active
+        transition transform .3s
+      &.fade-enter,&.fade-leave-to
+        transform translateY(0) 
       .list-header
         height: 40px
         line-height: 40px

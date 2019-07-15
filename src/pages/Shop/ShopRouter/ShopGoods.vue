@@ -17,22 +17,22 @@
           <li class="food-list-hook food-list" v-for="good in goods" :key="good.name" >
             <h1 class="title">{{good.name}}</h1>
             <ul>
-              <li class="food-item bottom-border-1px" v-for="foods in good.foods" :key="foods.name">
+              <li class="food-item bottom-border-1px" v-for="food in good.foods" :key="food.name" @click="show(food)">
                 <div class="icon">
                   <img width="57" height="57"
-                      :src="foods.icon">
+                      :src="food.icon">
                 </div>
                 <div class="content">
-                  <h2 class="name">{{foods.name}}</h2>
-                  <p class="desc">{{foods.description}}</p>
+                  <h2 class="name">{{food.name}}</h2>
+                  <p class="desc">{{food.description}}</p>
                   <div class="extra">
-                    <span class="count">月售{{foods.sellCount}}份</span>
-                    <span>好评率{{foods.rating}}%</span></div>
+                    <span class="count">月售{{food.sellCount}}份</span>
+                    <span>好评率{{food.rating}}%</span></div>
                   <div class="price">
-                    <span class="now">￥{{foods.price}}</span>
+                    <span class="now">￥{{food.price}}</span>
                   </div>
                   <div class="cartcontrol-wrapper">
-                    <CartControl/>
+                    <CartControl :food="food"/>
                   </div>
                 </div>
               </li>
@@ -40,32 +40,36 @@
           </li>      
         </ul>
       </div>
-      <ShopCart  />
+      <ShopCart/>
     </div>
-    <food  style="display:none"/>
+    <food :food="food" ref="food"/>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 import BScroll from 'better-scroll'
 import Food from '../../../components/Food/Food.vue'
 import ShopCart from '../../../components/ShopCart/ShopCart.vue'
+
+
   export default {
     data(){
       return {
         scrollY:0,
         tops:[],
         food:{}
-        
       }
     },
 
+
     mounted(){
+      // this.$store.dispatch('getShopGoods')
       if(this.goods.length>0){
         this._initTop()
         this._initScroll()
       }
+      
     },
     components:{
       Food,
@@ -86,7 +90,8 @@ import ShopCart from '../../../components/ShopCart/ShopCart.vue'
           this.leftScroll.scrollToElement(li, 500)
         }
         return index
-      }
+      },
+
 
     },
 
@@ -129,9 +134,14 @@ import ShopCart from '../../../components/ShopCart/ShopCart.vue'
           tops.push(top)
         });
         this.tops = tops
-        console.log(this.tops)
 
       },
+
+      show(food){
+        this.food = food
+        this.$refs.food.toggleShow() 
+      }
+
 
 
     },

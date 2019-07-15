@@ -26,7 +26,7 @@ import ShopHeader from '../../components/ShopHeader/ShopHeader.vue'
       this.$store.dispatch('getShopInfo')
       this.$store.dispatch('getShopGoods')
       this.$store.dispatch('getShopRatings')
-    }
+    },
   }
 </script>
 

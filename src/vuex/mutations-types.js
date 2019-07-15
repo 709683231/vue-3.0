@@ -10,4 +10,6 @@ export const RESET_TOKEN = 'reset_token'
 export const RECEIVE_GOODS = 'receive_goods'
 export const RECEIVE_RATINGS = 'receive_ratings'
 export const RECEIVE_INFO = 'receive_info'
-
+export const ADD_GOOD_COUNT = 'add_good_count'
+export const DELETE_GOOD_COUNT = 'delete_good_count'
+export const CLEAR_CART = 'clear_cart'

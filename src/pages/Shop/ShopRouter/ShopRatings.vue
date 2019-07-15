@@ -3,44 +3,48 @@
     <div class="ratings-content">
       <div class="overview">
         <div class="overview-left">
-          <h1 class="score">4.5</h1>
+          <h1 class="score">{{info.foodScore}}</h1>
           <div class="title">综合评分</div>
-          <div class="rank">高于周边商家90%</div>
+          <div class="rank">高于周边商家{{info.rankRate}}%</div>
         </div>
         <div class="overview-right">
           <div class="score-wrapper">
-            <span class="title">服务态度</span>
-            <div>Star组件</div>
-            <span class="score">4.4</span>
+            <div>
+              <Stars :size="36" :score="info.serviceScore"></Stars>
+            </div>
+              <span class="title">服务态度</span>
+            <span class="score">{{info.serviceScore}}</span>
           </div>
           <div class="score-wrapper">
+            <div>
+              <Stars :size="36" :score="info.deliveryPrice"></Stars>
+            </div>
             <span class="title">商品评分</span>
-            <div>Star组件</div>
-            <span class="score">4.6</span></div>
+            <span class="score">{{info.deliveryPrice}}</span></div>
           <div class="delivery-wrapper">
             <span class="title">送达时间</span>
-            <span class="delivery">30分钟</span>
+            <span class="delivery">{{info.deliveryTime}}分钟</span>
           </div>
         </div>
       </div>
 
-      <div class="split"></div>
+      <Split/>
 
-      <div>RatingSelect组件</div>
+      <RatingsFilter/>
 
       <div class="rating-wrapper">
         <ul>
-          <li class="rating-item">
+          <li class="rating-item" v-for="(rating,index) in ratings" :key="index">
             <div class="avatar">
-              <img width="28" height="28" src="http://static.galileo.xiaojukeji.com/static/tms/default_header.png">
+              <img width="28" height="28" :src="rating.avatar">
             </div>
             <div class="content">
-              <h1 class="name">xxx</h1>
+              <h1 class="name">{{rating.username}}</h1>
               <div class="star-wrapper">
-                <div>Star组件</div>
-                <span class="delivery">30</span>
+                <Stars :score="rating.score" :size="24"/>
+                <span class="delivery">{{rating.deliveryTime}}</span>
               </div>
-              <p class="text">还可以</p>
+              <p class="text">{{rating.text}}</p>
               <div class="recommend">
                 <span class="iconfont icon-thumb_up"></span>
               </div>
@@ -54,7 +58,23 @@
 </template>
 
 <script type="text/ecmascript-6">
+  import { mapState } from 'vuex'
+  import Split from '../../../components/Split/Split.vue'
+  import RatingsFilter from '../../../components/RatingsFilter/RatingsFilter.vue'
   export default {
+
+    computed:{
+      ...mapState({
+        info:state => state.shop.info,
+        ratings:state => state.shop.ratings
+      })
+    },
+
+    components:{
+      RatingsFilter,
+      Split
+    }
+
   }
 </script>
 
