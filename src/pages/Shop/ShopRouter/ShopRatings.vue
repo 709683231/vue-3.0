@@ -1,5 +1,5 @@
 <template>
-  <div class="ratings">
+  <div class="ratings" ref="ratingsScroll">
     <div class="ratings-content">
       <div class="overview">
         <div class="overview-left">
@@ -30,11 +30,11 @@
 
       <Split/>
 
-      <RatingsFilter/>
+      <RatingsFilter :onlyText="onlyText" :selectType="selectType"/>
 
-      <div class="rating-wrapper">
-        <ul>
-          <li class="rating-item" v-for="(rating,index) in ratings" :key="index">
+      <div class="rating-wrapper" >
+        <ul >
+          <li class="rating-item" v-for="(rating,index) in ratingsFilter" :key="index">
             <div class="avatar">
               <img width="28" height="28" :src="rating.avatar">
             </div>
@@ -59,21 +59,69 @@
 
 <script type="text/ecmascript-6">
   import { mapState } from 'vuex'
+  import BScroll from 'better-scroll'
   import Split from '../../../components/Split/Split.vue'
   import RatingsFilter from '../../../components/RatingsFilter/RatingsFilter.vue'
   export default {
+    data(){
+      return {
+        onlyText: true,
+        selectType: 1, // 2: 全部, 0: 推荐, 1: 吐槽
+      }
+    },
+    mounted(){
+      this.$eventbus.$on('setSelectType',this.setSelectType)
+      this.$eventbus.$on('setOnlyText',this.setOnlyText)
+      if(this.ratings.length>0){
+        this.ratingsScrolls = new BScroll(this.$refs.ratingsScroll,{
+          click:true
+        })
+      }
+    },
+    methods:{
+      setSelectType(type){
+        this.selectType = type
+      },
+      setOnlyText(){
+        this.onlyText = !this.onlyText
+      }
+    },
 
     computed:{
       ...mapState({
         info:state => state.shop.info,
         ratings:state => state.shop.ratings
-      })
+      }),
+
+      ratingsFilter(){
+        let { ratings, onlyText, selectType } = this
+        return ratings.filter(rating=>{
+          const { rateType, text } = rating
+          //rateType 0/1   0好                                   1
+          //text  length>0                                    2
+
+          //  onlyText: true,                                 2
+          //  selectType: 1, // 2: 全部, 0: 推荐, 1: 吐槽         1
+         
+          return (selectType===2 || selectType===rateType) && (!onlyText || text.length>0)
+        })
+      }
     },
 
     components:{
       RatingsFilter,
       Split
-    }
+    },
+
+    watch:{
+      ratings(){
+        this.$nextTick(()=>{
+          this.ratingsScrolls = new BScroll(this.$refs.ratingsScroll,{
+            click:true
+          })
+        })
+      }
+    },
 
   }
 </script>

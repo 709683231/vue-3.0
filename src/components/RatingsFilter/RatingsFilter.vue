@@ -1,17 +1,17 @@
 <template>
   <div class="ratings-filter">
     <div class="rating-type border-1px">
-      <span class="block">
-        全部<span class="count">{{ratings.length}}</span>
+      <span class="block" @click="select(2)" :class="{active:selectType===2}">
+        全部<span class="count" >{{ratings.length}}</span>
       </span>
-      <span class="block active">
-        推荐<span class="count">{{positiveRatingsCount}}</span>
+      <span class="block " @click="select(0)" :class="{active:selectType===0}">
+        推荐<span class="count" >{{positiveRatingsCount}}</span>
       </span>
-      <span class="block">
-        吐槽<span class="count">{{ratings.length-positiveRatingsCount}}</span>
+      <span class="block" @click="select(1)" :class="{active:selectType===1}">
+        吐槽<span class="count" >{{ratings.length-positiveRatingsCount}}</span>
       </span>
     </div>
-    <div class="switch on">
+    <div class="switch " :class="{on:onlyText}" @click="toggleOn">
       <span class="iconfont icon-check_circle"></span>
       <span class="text">只看有内容的评价</span>
     </div>
@@ -20,15 +20,33 @@
 
 <script type="text/ecmascript-6">
 import { mapState, mapGetters } from 'vuex'
+import { setTimeout } from 'timers';
+
   export default {
-    computed:{
-
-      ...mapState({
-        ratings:state => state.shop.ratings
-      }),
-
-      ...mapGetters(['positiveRatingsCount'])
+    props:{
+      selectType:Number,
+      onlyText:Boolean
     },
+    mounted(){
+      this.$nextTick(()=>{
+          this.myRatings = this.ratings
+      })
+    },
+    computed:{
+      ...mapState({
+        ratings:state => state.shop.ratings,
+      }),
+      ...mapGetters(['positiveRatingsCount']),
+    },
+
+    methods:{
+      toggleOn(){
+        this.$eventbus.$emit('setOnlyText')
+      },
+      select(type){
+        this.$eventbus.$emit('setSelectType',type)
+      }
+    }
   }
 </script>
 

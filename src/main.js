@@ -22,6 +22,8 @@ Vue.component('CartControl',CartControl)
 Vue.config.productionTip = false
 Vue.use(VeeValidate);
 
+Vue.prototype.$eventbus = new Vue
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

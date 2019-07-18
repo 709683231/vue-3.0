@@ -61,7 +61,7 @@ export default [
                 component:ShopRatings
             },
             {
-                path:'/shop',
+                path:'',
                 redirect:'/shop/shopgoods'
             },
         ]

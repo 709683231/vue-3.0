@@ -69,7 +69,6 @@ import ShopCart from '../../../components/ShopCart/ShopCart.vue'
         this._initTop()
         this._initScroll()
       }
-      
     },
     components:{
       Food,
@@ -83,12 +82,13 @@ import ShopCart from '../../../components/ShopCart/ShopCart.vue'
 
       currentIndex () {
         const {scrollY, tops} = this
-        const index = tops.findIndex((top, index) => scrollY>=top && scrollY<tops[index+1])
-        if (this.index!==index && this.leftScroll) {
+        let index = tops.findIndex((top, index) => scrollY>=top && scrollY<tops[index+1])
+        if (this.index !== index && this.leftScroll) {
           this.index = index
           const li = this.$refs.leftUl.children[index]
           this.leftScroll.scrollToElement(li, 500)
         }
+
         return index
       },
 
